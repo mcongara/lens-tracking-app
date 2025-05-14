@@ -1,73 +1,97 @@
-# Welcome to your Lovable project
+# Lens Tracking App
 
-## Project info
+A modern web application for tracking contact lens usage and maintaining eye health, built with React, TypeScript, and Vite.
 
-**URL**: https://lovable.dev/projects/1b325e40-9c7c-46c9-add7-8ec6b5bdd5b3
+## 🚀 Features
 
-## How can I edit this code?
+- Track contact lens usage and replacement schedules
+- Modern, responsive UI built with Shadcn/UI components
+- Dark/Light theme support
+- Internationalization support (i18n)
+- Real-time notifications and reminders
+- Secure data storage
+- Mobile-friendly design
 
-There are several ways of editing your application.
+## 📋 Prerequisites
 
-**Use Lovable**
+Before you begin, ensure you have the following installed:
+- Node.js (v18 or higher)
+- npm or yarn
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1b325e40-9c7c-46c9-add7-8ec6b5bdd5b3) and start prompting.
+## 🛠️ Installation
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/lens-tracking-app.git
+cd lens-tracking-app
 ```
 
-**Edit a file directly in GitHub**
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+3. Start the development server:
+```bash
+npm run dev
+# or
+yarn dev
+```
 
-**Use GitHub Codespaces**
+The app will be available at `http://localhost:5173`
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🏗️ Built With
 
-## What technologies are used for this project?
+- [React](https://react.dev/) - Frontend library
+- [TypeScript](https://www.typescriptlang.org/) - Programming language
+- [Vite](https://vitejs.dev/) - Build tool and development server
+- [Shadcn/UI](https://ui.shadcn.com/) - UI component library
+- [TailwindCSS](https://tailwindcss.com/) - CSS framework
+- [React Query](https://tanstack.com/query/latest) - Data fetching and caching
+- [React Router](https://reactrouter.com/) - Routing
+- [React Hook Form](https://react-hook-form.com/) - Form handling
+- [Zod](https://zod.dev/) - Schema validation
+- [i18next](https://www.i18next.com/) - Internationalization
 
-This project is built with:
+## 📝 Scripts
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run build:dev` - Build for development
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-## How can I deploy this project?
+## 🎨 Project Structure
 
-Simply open [Lovable](https://lovable.dev/projects/1b325e40-9c7c-46c9-add7-8ec6b5bdd5b3) and click on Share -> Publish.
+```
+lens-tracking-app/
+├── src/              # Source files
+├── public/           # Static files
+├── components.json   # Shadcn/UI components config
+├── tailwind.config.ts # Tailwind CSS configuration
+└── vite.config.ts    # Vite configuration
+```
 
-## Can I connect a custom domain to my Lovable project?
+## 🤝 Contributing
 
-Yes, you can!
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 📄 License
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 👥 Authors
+
+- Your Name - Initial work
+
+## 🙏 Acknowledgments
+
+- [Shadcn/UI](https://ui.shadcn.com/) for the beautiful component library
+- [Radix UI](https://www.radix-ui.com/) for accessible UI primitives
+- [TailwindCSS](https://tailwindcss.com/) for the utility-first CSS framework
