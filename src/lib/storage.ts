@@ -1,3 +1,5 @@
+import { api, UsageLog as ApiUsageLog } from './api';
+
 interface Entry {
   date: string; // ISO date format YYYY-MM-DD
   wearType: "glasses" | "lenses";
@@ -37,12 +39,28 @@ export const loadData = (): AppData => {
   return { ...defaultData };
 };
 
-// Save data to localStorage
-export const saveData = (data: AppData): void => {
+// Save data to localStorage and server
+export const saveData = async (data: AppData): Promise<void> => {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    
+    // If there's a token and token data, sync with server
+    if (data.token && data.tokenData[data.token]) {
+      const tokenData = data.tokenData[data.token];
+      const latestEntry = tokenData.entries[tokenData.entries.length - 1];
+      
+      if (latestEntry) {
+        await api.saveLog({
+          token: data.token,
+          date: latestEntry.date,
+          wearType: latestEntry.wearType,
+          lensUsageDays: tokenData.lensUsageDays,
+          lastLensReplacementDate: tokenData.lastLensReplacementDate
+        });
+      }
+    }
   } catch (error) {
-    console.error("Failed to save data to storage", error);
+    console.error("Failed to save data", error);
   }
 };
 
@@ -55,8 +73,7 @@ export const isAuthenticated = (): boolean => {
 // Authenticate user with token
 import { isValidToken, PREDEFINED_TOKENS } from './tokens';
 
-export const authenticate = (token: string): boolean => {
-  // Strict validation against predefined tokens
+export const authenticate = async (token: string): Promise<boolean> => {
   if (!isValidToken(token)) {
     console.log("Invalid token attempted:", token);
     return false;
@@ -65,24 +82,41 @@ export const authenticate = (token: string): boolean => {
   const data = loadData();
   data.token = token;
   
-  // Initialize token data if it doesn't exist
-  if (!data.tokenData[token]) {
-    data.tokenData[token] = {
-      entries: [],
-      lastLensReplacementDate: null,
-      lensUsageDays: 0,
-    };
+  try {
+    // Try to get latest data from server
+    const latestLog = await api.getLatestLog(token);
+    
+    if (latestLog) {
+      data.tokenData[token] = {
+        entries: [{
+          date: latestLog.date,
+          wearType: latestLog.wearType
+        }],
+        lastLensReplacementDate: latestLog.lastLensReplacementDate,
+        lensUsageDays: latestLog.lensUsageDays
+      };
+    } else {
+      // Initialize new token data if no server data exists
+      data.tokenData[token] = {
+        entries: [],
+        lastLensReplacementDate: null,
+        lensUsageDays: 0,
+      };
+    }
+    
+    await saveData(data);
+    return true;
+  } catch (error) {
+    console.error("Failed to authenticate with server", error);
+    return false;
   }
-  
-  saveData(data);
-  return true;
 };
 
 // Log out user
-export const logout = (): void => {
+export const logout = async (): Promise<void> => {
   const data = loadData();
   data.token = null;
-  saveData(data);
+  await saveData(data);
 };
 
 // Get current user's token data
@@ -96,7 +130,7 @@ const getCurrentTokenData = (): TokenData => {
 };
 
 // Add an entry for a specific date
-export const addEntry = (date: string, wearType: "glasses" | "lenses"): void => {
+export const addEntry = async (date: string, wearType: "glasses" | "lenses"): Promise<void> => {
   const data = loadData();
   if (!data.token) return;
   
@@ -120,7 +154,7 @@ export const addEntry = (date: string, wearType: "glasses" | "lenses"): void => 
   }
   
   data.tokenData[data.token] = tokenData;
-  saveData(data);
+  await saveData(data);
 };
 
 // Get entry for a specific date
@@ -152,7 +186,7 @@ export const removeEntry = (date: string): void => {
 };
 
 // Reset lens counter
-export const resetLensCounter = (): void => {
+export const resetLensCounter = async (): Promise<void> => {
   const data = loadData();
   if (!data.token) return;
   
@@ -163,7 +197,7 @@ export const resetLensCounter = (): void => {
   tokenData.lastLensReplacementDate = getCurrentDate();
   
   data.tokenData[data.token] = tokenData;
-  saveData(data);
+  await saveData(data);
 };
 
 // Get current date in YYYY-MM-DD format
