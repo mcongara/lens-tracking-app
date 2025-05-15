@@ -53,12 +53,17 @@ const Index = () => {
     }
   };
   
-  const handleDeleteEntry = () => {
+  const handleDeleteEntry = async () => {
     if (editDate) {
-      removeEntry(editDate);
-      setShowEditDialog(false);
-      setConfirmDelete(false);
-      setEditDate(null);
+      try {
+        await removeEntry(editDate);
+        setShowEditDialog(false);
+        setConfirmDelete(false);
+        setEditDate(null);
+      } catch (error) {
+        console.error('Error deleting entry:', error);
+        // You might want to show an error toast here
+      }
     }
   };
   

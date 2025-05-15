@@ -23,7 +23,6 @@ const defaultHeaders = {
 };
 
 const defaultOptions = {
-  credentials: 'include' as RequestCredentials,
   headers: defaultHeaders,
 };
 
@@ -40,6 +39,17 @@ export const api = {
     }
 
     return response.json();
+  },
+
+  async deleteLog(token: string, date: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}/logs/${token}/${date}`, {
+      ...defaultOptions,
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete log');
+    }
   },
 
   async getLogs(token: string): Promise<UsageLog[]> {

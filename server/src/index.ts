@@ -7,7 +7,11 @@ import { UsageLog } from './models/UsageLog';
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+
+// Helper function to get date in Istanbul timezone
+const getIstanbulDate = (date: string): Date => {
+  return new Date(new Date(date).toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
+};
 
 // Middleware
 app.use(express.json());
@@ -19,9 +23,18 @@ app.use(cors({
 }));
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/lens-tracker')
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((error) => console.error('MongoDB connection error:', error));
+const connectDB = async () => {
+  if (mongoose.connections[0].readyState) return;
+  
+  try {
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/lens-tracker');
+    console.log('Connected to MongoDB');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+  }
+};
+
+connectDB();
 
 // Root route
 app.get('/', (req, res) => {
@@ -77,6 +90,40 @@ app.get('/api/logs/:token', async (req, res) => {
   }
 });
 
+// Delete a specific log
+app.delete('/api/logs/:token/:date', async (req, res) => {
+  try {
+    const { token, date } = req.params;
+    
+    // Find and delete the log
+    const log = await UsageLog.findOneAndDelete({ token, date });
+    
+    if (!log) {
+      return res.status(404).json({ error: 'Log not found' });
+    }
+    
+    // Get the latest log after deletion to update lens usage days
+    const latestLog = await UsageLog.findOne({ token }).sort({ date: -1 });
+    
+    // If the deleted log was a lens day, update the lens usage days count
+    if (log.wearType === 'lenses') {
+      // Update all subsequent logs with decremented lens usage days
+      await UsageLog.updateMany(
+        { 
+          token,
+          date: { $gt: date }
+        },
+        { $inc: { lensUsageDays: -1 } }
+      );
+    }
+    
+    res.json({ message: 'Log deleted successfully', latestLog });
+  } catch (error) {
+    console.error('Error deleting log:', error);
+    res.status(500).json({ error: 'Failed to delete log' });
+  }
+});
+
 // Get latest log for a token
 app.get('/api/logs/:token/latest', async (req, res) => {
   try {
@@ -94,12 +141,13 @@ app.get('/api/logs/:token/monthly/:year/:month', async (req, res) => {
   try {
     const { token, year, month } = req.params;
     
-    // Create date range for the specified month
+    // Create date range for the specified month in Istanbul timezone
     const startDate = `${year}-${month.padStart(2, '0')}-01`;
     const nextMonth = (parseInt(month) % 12 + 1).toString().padStart(2, '0');
     const nextYear = parseInt(month) === 12 ? (parseInt(year) + 1).toString() : year;
     const endDate = `${nextYear}-${nextMonth}-01`;
 
+    // Find logs within the date range
     const logs = await UsageLog.find({
       token,
       date: {
@@ -151,7 +199,13 @@ app.delete('/api/logs', async (req, res) => {
   }
 });
 
-// Start server
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-}); 
+// Only start the server if we're not in a Vercel environment
+if (process.env.NODE_ENV !== 'production') {
+  const port = process.env.PORT || 3000;
+  app.listen(port, () => {
+    console.log(`Server running on port ${port}`);
+  });
+}
+
+// Export the app for Vercel
+export default app; 

@@ -164,7 +164,7 @@ export const getEntryForDate = (date: string): Entry | undefined => {
 };
 
 // Remove an entry for a specific date
-export const removeEntry = (date: string): void => {
+export const removeEntry = async (date: string): Promise<void> => {
   const data = loadData();
   if (!data.token) return;
   
@@ -180,7 +180,20 @@ export const removeEntry = (date: string): void => {
   
   tokenData.entries = tokenData.entries.filter(entry => entry.date !== date);
   data.tokenData[data.token] = tokenData;
-  saveData(data);
+  
+  try {
+    // Delete from server first
+    await api.deleteLog(data.token, date);
+    
+    // Then update local storage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    
+    // Notify listeners that data has changed
+    dataChangeEmitter.emit();
+  } catch (error) {
+    console.error("Failed to delete entry", error);
+    throw error;
+  }
 };
 
 // Reset lens counter
@@ -198,9 +211,14 @@ export const resetLensCounter = async (): Promise<void> => {
   await saveData(data);
 };
 
-// Get current date in YYYY-MM-DD format
+// Get current date in YYYY-MM-DD format for Europe/Istanbul timezone
 export const getCurrentDate = (): string => {
-  return new Date().toISOString().split('T')[0];
+  const date = new Date();
+  const istanbulDate = new Date(date.toLocaleString('en-US', { timeZone: 'Europe/Istanbul' }));
+  const year = istanbulDate.getFullYear();
+  const month = String(istanbulDate.getMonth() + 1).padStart(2, '0');
+  const day = String(istanbulDate.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 // Get stats for a given month and year
