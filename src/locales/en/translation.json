@@ -7,6 +7,7 @@
       "description": "Enter your access token to continue",
       "inputPlaceholder": "Enter your access token",
       "continueButton": "Continue",
+      "authenticating": "Authenticating...",
       "noAccount": "No account? Contact the administrator for your token.",
       "errors": {
         "emptyToken": "Please enter an access token",
@@ -54,7 +55,8 @@
       "lenses": "Lenses: {{days}} days",
       "lensCycle": "Lens Cycle",
       "daysUsed": "{{used}}/{{total}} days",
-      "daysRemaining": "{{days}} days remaining"
+      "daysRemaining": "{{days}} days remaining",
+      "lastReplaced": "Last replaced: {{date}}"
     },
     "months": {
       "january": "January",

@@ -14,9 +14,11 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
   const { t } = useTranslation();
   const [token, setToken] = useState("");
   const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     
     if (!token.trim()) {
       setError(t('auth.errors.emptyToken'));
@@ -28,11 +30,19 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
       return;
     }
     
-    const success = authenticate(token);
-    if (success) {
-      onAuthenticated();
-    } else {
+    try {
+      setIsLoading(true);
+      const success = await authenticate(token);
+      if (success) {
+        onAuthenticated();
+      } else {
+        setError(t('auth.errors.authFailed'));
+      }
+    } catch (error) {
+      console.error('Authentication error:', error);
       setError(t('auth.errors.authFailed'));
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -56,11 +66,12 @@ const AuthForm: React.FC<AuthFormProps> = ({ onAuthenticated }) => {
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 className="w-full"
+                disabled={isLoading}
               />
               {error && <p className="text-destructive text-sm">{error}</p>}
             </div>
-            <Button type="submit" className="w-full">
-              {t('auth.continueButton')}
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? t('auth.authenticating') : t('auth.continueButton')}
             </Button>
           </form>
         </CardContent>

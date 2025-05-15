@@ -8,6 +8,7 @@
       "inputPlaceholder": "Erişim kodunuzu girin",
       "continueButton": "Devam Et",
       "noAccount": "Hesabınız yok mu? Erişim kodunuz için yönetici ile iletişime geçin.",
+      "authenticating": "Kimlik doğrulanıyor...",
       "errors": {
         "emptyToken": "Lütfen erişim kodunu girin",
         "invalidToken": "Geçersiz erişim kodu",
@@ -54,7 +55,8 @@
       "lenses": "Lens: {{days}} gün",
       "lensCycle": "Lens Döngüsü",
       "daysUsed": "{{used}}/{{total}} gün",
-      "daysRemaining": "{{days}} gün kaldı"
+      "daysRemaining": "{{days}} gün kaldı",
+      "lastReplaced": "Son değiştirilme tarihi: {{date}}"
     },
     "months": {
       "january": "Ocak",

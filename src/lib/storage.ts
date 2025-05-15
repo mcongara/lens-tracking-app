@@ -1,4 +1,5 @@
 import { api, UsageLog as ApiUsageLog } from './api';
+import { dataChangeEmitter } from './events';
 
 interface Entry {
   date: string; // ISO date format YYYY-MM-DD
@@ -59,6 +60,9 @@ export const saveData = async (data: AppData): Promise<void> => {
         });
       }
     }
+    
+    // Notify listeners that data has changed
+    dataChangeEmitter.emit();
   } catch (error) {
     console.error("Failed to save data", error);
   }
@@ -80,29 +84,23 @@ export const authenticate = async (token: string): Promise<boolean> => {
   }
   
   const data = loadData();
-  data.token = token;
   
   try {
-    // Try to get latest data from server
-    const latestLog = await api.getLatestLog(token);
+    // Try to get all logs from server
+    const logs = await api.getLogs(token);
     
-    if (latestLog) {
-      data.tokenData[token] = {
-        entries: [{
-          date: latestLog.date,
-          wearType: latestLog.wearType
-        }],
-        lastLensReplacementDate: latestLog.lastLensReplacementDate,
-        lensUsageDays: latestLog.lensUsageDays
-      };
-    } else {
-      // Initialize new token data if no server data exists
-      data.tokenData[token] = {
-        entries: [],
-        lastLensReplacementDate: null,
-        lensUsageDays: 0,
-      };
-    }
+    // Save token and create data structure regardless of logs
+    data.token = token;
+    
+    // Initialize token data with empty state or existing logs
+    data.tokenData[token] = {
+      entries: logs ? logs.map(log => ({
+        date: log.date,
+        wearType: log.wearType
+      })) : [],
+      lastLensReplacementDate: logs?.[0]?.lastLensReplacementDate || null,
+      lensUsageDays: logs?.[0]?.lensUsageDays || 0
+    };
     
     await saveData(data);
     return true;

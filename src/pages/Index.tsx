@@ -4,7 +4,7 @@ import DailyPrompt from "@/components/DailyPrompt";
 import SelectionModal from "@/components/SelectionModal";
 import Calendar from "@/components/Calendar";
 import Stats from "@/components/Stats";
-import { isAuthenticated, getCurrentDate, logout, removeEntry, getEntryForDate } from "@/lib/storage";
+import { isAuthenticated, getCurrentDate, logout, removeEntry, getEntryForDate, loadData } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -18,16 +18,24 @@ const Index = () => {
   const [editDate, setEditDate] = useState<string | null>(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [currentToken, setCurrentToken] = useState<string | null>(null);
   
   // Current month and year for calendar and stats
   const today = new Date();
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   
-  // Check if user is authenticated on mount
+  // Check if user is authenticated on mount and get token
   useEffect(() => {
-    setAuthenticated(isAuthenticated());
+    checkAuthAndUpdateToken();
   }, []);
+
+  const checkAuthAndUpdateToken = () => {
+    const isAuth = isAuthenticated();
+    setAuthenticated(isAuth);
+    const data = loadData();
+    setCurrentToken(data.token);
+  };
   
   const handleOpenSelection = () => {
     setEditDate(null);
@@ -57,6 +65,7 @@ const Index = () => {
   const handleLogout = () => {
     logout();
     setAuthenticated(false);
+    setCurrentToken(null);
   };
   
   const handlePreviousMonth = () => {
@@ -85,8 +94,8 @@ const Index = () => {
     return entry?.wearType === "glasses" ? <Glasses className="h-5 w-5" /> : <Circle className="h-5 w-5" />;
   };
 
-  if (!authenticated) {
-    return <AuthForm onAuthenticated={() => setAuthenticated(true)} />;
+  if (!authenticated || !currentToken) {
+    return <AuthForm onAuthenticated={checkAuthAndUpdateToken} />;
   }
 
   return (
@@ -123,10 +132,14 @@ const Index = () => {
           onChangeDate={handleDateClick} 
         />
         
-        <Stats month={currentMonth} year={currentYear} />
+        <Stats 
+          key={currentToken} // Force remount when token changes
+          month={currentMonth} 
+          year={currentYear} 
+          token={currentToken}
+        />
       </main>
       
-      {/* Selection Modal */}
       <SelectionModal 
         open={selectionOpen} 
         onOpenChange={setSelectionOpen}
@@ -135,30 +148,31 @@ const Index = () => {
       
       {/* Edit Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-center gap-2">
-              {editDate && (
-                <>
-                  {t('calendar.entryFor', { date: new Date(editDate).toLocaleDateString() })}
-                  {getEntryTypeIcon(editDate)}
-                </>
-              )}
+            <DialogTitle>
+              {editDate && t('calendar.entryFor', { date: new Date(editDate).toLocaleDateString() })}
             </DialogTitle>
           </DialogHeader>
-          
-          <DialogFooter className="sm:justify-center">
-            <Button variant="outline" onClick={() => setSelectionOpen(true)}>
-              {t('actions.changeEntry')}
-            </Button>
-            <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
-              {t('actions.deleteEntry')}
-            </Button>
-          </DialogFooter>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              {getEntryTypeIcon(editDate)}
+            </div>
+            <div className="space-x-2">
+              <Button variant="outline" onClick={() => {
+                setShowEditDialog(false);
+                setSelectionOpen(true);
+              }}>
+                {t('actions.changeEntry')}
+              </Button>
+              <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
+                {t('actions.deleteEntry')}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
-      
-      {/* Confirm Delete Dialog */}
+
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialogContent>
           <AlertDialogHeader>
